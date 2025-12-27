@@ -3,9 +3,9 @@ from qiskit_aer import Aer, AerSimulator
 from qiskit import QuantumCircuit, transpile, QuantumRegister
 from scipy import linalg
 
-nqubits = 5
-depth = 7
-t_proportion = 0.1
+nqubits = 7
+depth = 8
+t_proportion = 0.2
 timestep = 1
 
 def random_clifford_t_circuit(nqubits, depth, t_proportion):
