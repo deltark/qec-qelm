@@ -29,9 +29,9 @@ import scipy.linalg as sla
 #             doped_sequence[pos]= ('T', doped_sequence[pos][1])  # Replace single qubit gate with T
 #     return doped_sequence
 
-nqubits = 8
-depth = 50
-t_proportion = 0.2
+# nqubits = 8
+# depth = 80
+# t_proportion = 0.1
 
 # print("Generating random Clifford+T sequence...")
 # print(f"Number of qubits: {nqubits}, Number of gates: {ngates}, T-gate proportion: {t_proportion}")
@@ -47,6 +47,7 @@ H = sp.csc_matrix(np.array([[1, 1], [1, -1]]) / np.sqrt(2))
 S = sp.csc_matrix(np.array([[1, 0], [0, 1j]]))
 T = sp.csc_matrix(np.array([[1, 0], [0, np.exp(1j * np.pi / 4)]]))
 X = sp.csc_matrix(np.array([[0, 1], [1, 0]]))
+Z = sp.csc_matrix(np.array([[1, 0], [0, -1]]))
 zero_projector = sp.csc_matrix(np.array([[1, 0], [0, 0]]))
 one_projector = sp.csc_matrix(np.array([[0, 0], [0, 1]]))
 
@@ -163,38 +164,41 @@ def random_clifford_T_unitary(n, depth, p_T):
     return U
 
 
-unitary = random_clifford_T_unitary(nqubits, depth, t_proportion).toarray()
-print("Circuit unitary:\n", np.asarray(unitary).round(5))
+# unitary = random_clifford_T_unitary(nqubits, depth, t_proportion).toarray()
+# print("Circuit unitary:\n", np.asarray(unitary).round(5))
 
 def get_hamiltonian(unitary, timestep):
     """Compute the Hamiltonian from the unitary."""
     ham = 1j / timestep * sla.logm(unitary)
     return ham
 
-ham = get_hamiltonian(unitary, timestep=1)
-print("Log of unitary (Hamiltonian):\n", np.asarray(ham).round(5))
+def get_average_ratio_of_adjacent_gaps(unitary):
+    """Compute the average ratio of adjacent energy gaps."""
+    ham = get_hamiltonian(unitary, timestep=1)
+    # print("Log of unitary (Hamiltonian):\n", np.asarray(ham).round(5))
 
-# Get eigenvalues
-eigenvalues, _ = sla.eig(ham)
-eigenvalues = np.real(eigenvalues)
-eigenvalues = np.sort(eigenvalues)
-#positive
-eigenvalues = eigenvalues[eigenvalues >= 0]
-print("Eigenvalues of the Hamiltonian:\n", np.asarray(eigenvalues).round(5))
+    # Get eigenvalues
+    eigenvalues, _ = sla.eig(ham)
+    eigenvalues = np.real(eigenvalues)
+    eigenvalues = np.sort(eigenvalues)
+    #positive
+    eigenvalues = eigenvalues[eigenvalues >= 0]
+    # print("Eigenvalues of the Hamiltonian:\n", np.asarray(eigenvalues).round(5))
 
-# Get energy gaps
-energy_gaps = np.diff(eigenvalues)
-print("Energy gaps:\n", np.asarray(energy_gaps).round(5))
+    # Get energy gaps
+    energy_gaps = np.diff(eigenvalues)
+    # print("Energy gaps:\n", np.asarray(energy_gaps).round(5))
 
-# Ratio of adjacent gaps
-ratios = energy_gaps[1:] / energy_gaps[:-1]
-# invert if needed to have ratios <= 1
-ratios = np.minimum(ratios, 1/ratios)
-print("Ratios of adjacent gaps:\n", np.asarray(ratios).round(5))
+    # Ratio of adjacent gaps
+    ratios = energy_gaps[1:] / energy_gaps[:-1]
+    # invert if needed to have ratios <= 1
+    ratios = np.minimum(ratios, 1/ratios)
+    # print("Ratios of adjacent gaps:\n", np.asarray(ratios).round(5))
 
-# Average ratio
-avg_ratio = np.mean(ratios)
-print("Average ratio of adjacent gaps:", round(avg_ratio, 5))
+    # Average ratio
+    avg_ratio = np.mean(ratios)
+    # print("Average ratio of adjacent gaps:", round(avg_ratio, 5))
+    return round(avg_ratio, 5)
 
 
 ##### FOURIER ANALYSIS #####
@@ -320,26 +324,26 @@ def ising_hamiltonian(nqubits, J=1.0, Bz=0.0, Bx=1.0):
         H += Bx * pauli_operator(X, j, nqubits)
     return H
 
-n_accessible = 4
-n_hidden = nqubits - n_accessible
-print(f"Computing Fourier coefficients with {n_accessible} accessible qubits and {n_hidden} hidden qubits...")  
-Z = sp.csc_matrix(np.array([[1, 0], [0, -1]]))
-# observable = Z.copy()
-observable = X.copy()
-for _ in range(n_accessible-1):
-    observable = sp.kron(observable, X.copy(), format='csc')
-    # observable = sp.kron(observable, I2, format='csc')
-observable = sp.kron(observable, sp.identity(2**(n_hidden), format='csc'), format='csc')
+# n_accessible = 4
+# n_hidden = nqubits - n_accessible
+# print(f"Computing Fourier coefficients with {n_accessible} accessible qubits and {n_hidden} hidden qubits...")  
+# Z = sp.csc_matrix(np.array([[1, 0], [0, -1]]))
+# # observable = Z.copy()
+# observable = X.copy()
+# for _ in range(n_accessible-1):
+#     observable = sp.kron(observable, X.copy(), format='csc')
+#     # observable = sp.kron(observable, I2, format='csc')
+# observable = sp.kron(observable, sp.identity(2**(n_hidden), format='csc'), format='csc')
 
-# print("Observable:\n", observable)
-ising_hamiltonian_chaotic = ising_hamiltonian(nqubits, J=-1.0, Bz=0.7, Bx=1.5)
-ising_unitary = sp.linalg.expm(-1j * ising_hamiltonian_chaotic)
+# # print("Observable:\n", observable)
+# ising_hamiltonian_chaotic = ising_hamiltonian(nqubits, J=-1.0, Bz=0.7, Bx=1.5)
+# ising_unitary = sp.linalg.expm(-1j * ising_hamiltonian_chaotic)
 
-fourier_coeffs = compute_fourier_coeffs(nqubits, observable, ising_unitary, n_accessible)
-print("Fourier coefficients:\n", np.asarray(fourier_coeffs))
+# fourier_coeffs = compute_fourier_coeffs(nqubits, observable, ising_unitary, n_accessible)
+# print("Fourier coefficients:\n", np.asarray(fourier_coeffs))
 
-print("For random Clifford+T circuit:")
-fourier_coeffs_circuit = compute_fourier_coeffs(nqubits, observable, unitary, n_accessible)
-print("Fourier coefficients:\n", np.asarray(fourier_coeffs_circuit))
+# print("For random Clifford+T circuit:")
+# fourier_coeffs_circuit = compute_fourier_coeffs(nqubits, observable, unitary, n_accessible)
+# print("Fourier coefficients:\n", np.asarray(fourier_coeffs_circuit))
 
-#TODO : Check big endian/little endian consistency
+# #TODO : Check big endian/little endian consistency
