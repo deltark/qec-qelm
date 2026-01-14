@@ -2,45 +2,62 @@ import numpy as np
 import scipy.sparse as sp
 import scipy.linalg as sla
 
-# def random_clifford_sequence(nqubits, ngates):
-#     """Generate a random sequence of Clifford gates."""
-#     gates = ['H', 'S', 'CNOT']
+# def random_2_qubit_gate_sequence(i, j, depth, p_T):
+#     """Generate a random sequence of gates."""
+#     gates = ['H', 'S', 'CNOT', 'T']
 #     sequence = []
-#     for _ in range(ngates):
-#         gate = np.random.choice(gates)
+#     for _ in range(depth):
+#         gate = np.random.choice(gates, p=[0.4, 0.4, 3/depth])
 #         if gate == 'CNOT':
-#             control = np.random.randint(0, nqubits)
-#             target = (control + np.random.randint(1, nqubits)) % nqubits
+#             control = i
+#             target = j
 #             sequence.append((gate, control, target))
 #         else:
 #             qubit = np.random.randint(0, nqubits)
 #             sequence.append((gate, qubit))
 #     return sequence
 
-# def t_doping(sequence, t_proportion):
-#     """Insert T-gates into the Clifford sequence based on the given proportion."""
-#     t_count = int(len(sequence) * t_proportion)
-#     doped_sequence = sequence.copy()
-#     positions_to_replace = np.random.choice(len(doped_sequence), t_count, replace=False)
-#     for pos in positions_to_replace:
-#         if doped_sequence[pos][0] == 'CNOT':
-#             doped_sequence[pos] = ('T', doped_sequence[pos][2])  # Replace CNOT with T on target qubit
-#         else:
-#             doped_sequence[pos]= ('T', doped_sequence[pos][1])  # Replace single qubit gate with T
-#     return doped_sequence
+def random_clifford_sequence(nqubits, ngates):
+    """Generate a random sequence of Clifford gates."""
+    gates = ['H', 'S', 'CNOT']
+    sequence = []
+    for _ in range(ngates):
+        i, j = np.random.choice(nqubits, size=2, replace=False)
+        gate = np.random.choice(gates, p=[0.4, 0.4, 0.2])
+        if gate == 'CNOT':
+            # control = np.random.randint(0, nqubits)
+            # target = (control + np.random.randint(1, nqubits)) % nqubits
+            sequence.append((gate, i, j))
+        else:
+            qubit = np.random.choice([i,j])
+            sequence.append((gate, qubit))
+    return sequence
 
-# nqubits = 8
+def t_doping(sequence, t_proportion):
+    """Insert T-gates into the Clifford sequence based on the given proportion."""
+    t_count = int(len(sequence) * t_proportion)
+    doped_sequence = sequence.copy()
+    positions_to_replace = np.random.choice(len(doped_sequence), t_count, replace=False)
+    for pos in positions_to_replace:
+        if doped_sequence[pos][0] != 'CNOT':
+            # doped_sequence[pos] = ('T', doped_sequence[pos][2])  # Replace CNOT with T on target qubit
+        # else:
+            doped_sequence[pos]= ('T', doped_sequence[pos][1])  # Replace single qubit gate with T
+    return doped_sequence
+
+nqubits = 8
+ngates = 10*nqubits**2
 # depth = 80
-# t_proportion = 0.1
+t_proportion = 0.2
 
-# print("Generating random Clifford+T sequence...")
-# print(f"Number of qubits: {nqubits}, Number of gates: {ngates}, T-gate proportion: {t_proportion}")
-# clifford_sequence = random_clifford_sequence(nqubits, ngates)
-# print("Random Clifford sequence:")
-# print(clifford_sequence)
-# doped_sequence = t_doping(clifford_sequence, t_proportion)
-# print("Random Clifford+T sequence:")
-# print(doped_sequence)
+print("Generating random Clifford+T sequence...")
+print(f"Number of qubits: {nqubits}, Number of gates: {ngates}, T-gate proportion: {t_proportion}")
+clifford_sequence = random_clifford_sequence(nqubits, ngates)
+print("Random Clifford sequence:")
+print(clifford_sequence)
+doped_sequence = t_doping(clifford_sequence, t_proportion)
+print("Random Clifford+T sequence:")
+print(doped_sequence)
 
 I2 = sp.identity(2, format="csc", dtype=complex)
 H = sp.csc_matrix(np.array([[1, 1], [1, -1]]) / np.sqrt(2))
@@ -59,48 +76,48 @@ CNOT_01 = sp.csc_matrix(
 )
 
 
-# def full_matrix(nqubits, sequence):
-#     """Construct the full unitary matrix for the given sequence."""
-#     U = sp.identity(2**nqubits, format='csc')
-#     for gate in sequence:
-#         if gate[0] != 'CNOT':
-#             if gate[0] == 'H':
-#                 single_gate = H
-#             elif gate[0] == 'S':
-#                 single_gate = S
-#             elif gate[0] == 'T':
-#                 single_gate = T
-#             qubit = gate[1]
-#             op = sp.identity(1, format='csc')
-#             for i in range(nqubits):
-#                 if i == qubit:
-#                     op = sp.kron(op, single_gate, format='csc')
-#                 else:
-#                     op = sp.kron(op, sp.identity(2, format='csc'), format='csc')
-#         else:
-#             control = gate[1]
-#             target = gate[2]
-#             op1 = sp.identity(1, format='csc')
-#             for i in range(nqubits):
-#                 if i == control:
-#                     op1 = sp.kron(op1, zero_projector, format='csc')
-#                 # elif i == target:
-#                 #     op1 = sp.kron(op, sp.identity(2, format='csc'), format='csc')
-#                 else:
-#                     op1 = sp.kron(op1, sp.identity(2, format='csc'), format='csc')
-#             op2 = sp.identity(1, format='csc')
-#             for i in range(nqubits):
-#                 if i == control:
-#                     op2 = sp.kron(op2, one_projector, format='csc')
-#                 elif i == target:
-#                     op2 = sp.kron(op2, X, format='csc')
-#                 else:
-#                     op2 = sp.kron(op2, sp.identity(2, format='csc'), format='csc')
-#             op = op1 + op2
+def full_matrix(nqubits, sequence):
+    """Construct the full unitary matrix for the given sequence."""
+    U = sp.identity(2**nqubits, format='csc')
+    for gate in sequence:
+        if gate[0] != 'CNOT':
+            if gate[0] == 'H':
+                single_gate = H
+            elif gate[0] == 'S':
+                single_gate = S
+            elif gate[0] == 'T':
+                single_gate = T
+            qubit = gate[1]
+            op = sp.identity(1, format='csc')
+            for i in range(nqubits):
+                if i == qubit:
+                    op = sp.kron(op, single_gate, format='csc')
+                else:
+                    op = sp.kron(op, sp.identity(2, format='csc'), format='csc')
+        else:
+            control = gate[1]
+            target = gate[2]
+            op1 = sp.identity(1, format='csc')
+            for i in range(nqubits):
+                if i == control:
+                    op1 = sp.kron(op1, zero_projector, format='csc')
+                # elif i == target:
+                #     op1 = sp.kron(op, sp.identity(2, format='csc'), format='csc')
+                else:
+                    op1 = sp.kron(op1, sp.identity(2, format='csc'), format='csc')
+            op2 = sp.identity(1, format='csc')
+            for i in range(nqubits):
+                if i == control:
+                    op2 = sp.kron(op2, one_projector, format='csc')
+                elif i == target:
+                    op2 = sp.kron(op2, X, format='csc')
+                else:
+                    op2 = sp.kron(op2, sp.identity(2, format='csc'), format='csc')
+            op = op1 + op2
             
-#         U = op @ U
+        U = op @ U
         
-#     return U
+    return U
 
 def lift_1q_gate(gate, q, n):
     ops = []
@@ -126,46 +143,71 @@ def lift_2q_gate(gate, q, n):
         U = sp.kron(U, op, format="csc")
     return U
 
-def random_clifford_layer(n):
-    U = sp.identity(2**n, format="csc", dtype=complex)
 
-    # Random H / S on each qubit
-    for q in range(n):
-        if np.random.rand() < 0.5:
-            U = lift_1q_gate(H, q, n) @ U
-        if np.random.rand() < 0.5:
-            U = lift_1q_gate(S, q, n) @ U
+# def random_clifford_layer(n):
+#     U = sp.identity(2**n, format="csc", dtype=complex)
 
-    # Brickwork CNOTs
-    for q in range(0, n - 1, 2):
-        if np.random.rand() < 0.5:
-            U = lift_2q_gate(CNOT_01, q, n) @ U
+#     # Random H / S on each qubit
+#     for q in range(n):
+#         if np.random.rand() < 0.5:
+#             U = lift_1q_gate(H, q, n) @ U
+#         if np.random.rand() < 0.5:
+#             U = lift_1q_gate(S, q, n) @ U
 
-    return U
+#     # Brickwork CNOTs
+#     for q in range(0, n - 1, 2):
+#         if np.random.rand() < 0.5:
+#             U = lift_2q_gate(CNOT_01, q, n) @ U
 
-def random_clifford_T_unitary(n, depth, p_T):
-    """
-    n     : number of qubits
-    depth : number of layers
-    p_T   : probability of T gate per qubit per layer
-    """
-    D = 2**n
-    U = sp.identity(D, format="csc", dtype=complex)
+#     return U
 
-    for _ in range(depth):
-        # Clifford scrambling
-        U = random_clifford_layer(n) @ U
+# def random_clifford_T_unitary(n, depth, p_T):
+#     """
+#     n     : number of qubits
+#     depth : number of layers
+#     p_T   : probability of T gate per qubit per layer
+#     """
+#     D = 2**n
+#     U = sp.identity(D, format="csc", dtype=complex)
 
-        # T layer
-        for q in range(n):
-            if np.random.rand() < p_T:
-                U = lift_1q_gate(T, q, n) @ U
+#     for _ in range(depth):
+#         # Clifford
+#         U = random_clifford_layer(n) @ U
 
-    return U
+#         # Random H / S on each qubit
+#         for q in range(n):
+#             if np.random.rand() < 0.5:
+#                 U = lift_1q_gate(H, q, n) @ U
+#             if np.random.rand() < 0.5:
+#                 U = lift_1q_gate(S, q, n) @ U
+#             if np.random.rand() < p_T:
+#                 U = lift_1q_gate(T, q, n) @ U
+
+#         # Brickwork CNOTs
+#         for q in range(0, n - 1, 2):
+#             if np.random.rand() < 0.5:
+#                 U = lift_2q_gate(CNOT_01, q, n) @ U
+
+#         # T layer
+#         for q in range(n):
+#             if np.random.rand() < p_T:
+#                 U = lift_1q_gate(T, q, n) @ U
+
+#     return U
 
 
 # unitary = random_clifford_T_unitary(nqubits, depth, t_proportion).toarray()
 # print("Circuit unitary:\n", np.asarray(unitary).round(5))
+
+def random_clifford_T_unitary_from_sequence(nqubits, ngates, t_proportion):
+    """Generate the unitary matrix for a given Clifford+T gate sequence."""
+    sequence = random_clifford_sequence(nqubits, ngates)
+    doped_sequence = t_doping(sequence, t_proportion)
+    U = full_matrix(nqubits, doped_sequence)
+    return U
+
+unitary = full_matrix(nqubits, doped_sequence)
+print("Circuit unitary:\n", np.asarray(unitary).round(5))
 
 def get_hamiltonian(unitary, timestep):
     """Compute the Hamiltonian from the unitary."""
@@ -332,10 +374,10 @@ def ising_hamiltonian(nqubits, J=1.0, Bz=0.0, Bx=1.0):
 # observable = X.copy()
 # for _ in range(n_accessible-1):
 #     observable = sp.kron(observable, X.copy(), format='csc')
-#     # observable = sp.kron(observable, I2, format='csc')
+    # observable = sp.kron(observable, I2, format='csc')
 # observable = sp.kron(observable, sp.identity(2**(n_hidden), format='csc'), format='csc')
 
-# # print("Observable:\n", observable)
+# print("Observable:\n", observable)
 # ising_hamiltonian_chaotic = ising_hamiltonian(nqubits, J=-1.0, Bz=0.7, Bx=1.5)
 # ising_unitary = sp.linalg.expm(-1j * ising_hamiltonian_chaotic)
 
