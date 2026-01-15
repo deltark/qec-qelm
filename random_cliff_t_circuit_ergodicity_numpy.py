@@ -39,25 +39,25 @@ def t_doping(sequence, t_proportion):
     doped_sequence = sequence.copy()
     positions_to_replace = np.random.choice(len(doped_sequence), t_count, replace=False)
     for pos in positions_to_replace:
-        if doped_sequence[pos][0] != 'CNOT':
-            # doped_sequence[pos] = ('T', doped_sequence[pos][2])  # Replace CNOT with T on target qubit
-        # else:
+        if doped_sequence[pos][0] == 'CNOT':
+            doped_sequence[pos] = ('T', doped_sequence[pos][2])  # Replace CNOT with T on target qubit
+        else:
             doped_sequence[pos]= ('T', doped_sequence[pos][1])  # Replace single qubit gate with T
     return doped_sequence
 
-nqubits = 8
-ngates = 10*nqubits**2
-# depth = 80
-t_proportion = 0.2
+# nqubits = 8
+# ngates = 10*nqubits**2
+# # depth = 80
+# t_proportion = 0.2
 
-print("Generating random Clifford+T sequence...")
-print(f"Number of qubits: {nqubits}, Number of gates: {ngates}, T-gate proportion: {t_proportion}")
-clifford_sequence = random_clifford_sequence(nqubits, ngates)
-print("Random Clifford sequence:")
-print(clifford_sequence)
-doped_sequence = t_doping(clifford_sequence, t_proportion)
-print("Random Clifford+T sequence:")
-print(doped_sequence)
+# print("Generating random Clifford+T sequence...")
+# print(f"Number of qubits: {nqubits}, Number of gates: {ngates}, T-gate proportion: {t_proportion}")
+# clifford_sequence = random_clifford_sequence(nqubits, ngates)
+# print("Random Clifford sequence:")
+# print(clifford_sequence)
+# doped_sequence = t_doping(clifford_sequence, t_proportion)
+# print("Random Clifford+T sequence:")
+# print(doped_sequence)
 
 I2 = sp.identity(2, format="csc", dtype=complex)
 H = sp.csc_matrix(np.array([[1, 1], [1, -1]]) / np.sqrt(2))
@@ -65,6 +65,7 @@ S = sp.csc_matrix(np.array([[1, 0], [0, 1j]]))
 T = sp.csc_matrix(np.array([[1, 0], [0, np.exp(1j * np.pi / 4)]]))
 X = sp.csc_matrix(np.array([[0, 1], [1, 0]]))
 Z = sp.csc_matrix(np.array([[1, 0], [0, -1]]))
+Y = sp.csc_matrix(np.array([[0, -1j], [1j, 0]]))
 zero_projector = sp.csc_matrix(np.array([[1, 0], [0, 0]]))
 one_projector = sp.csc_matrix(np.array([[0, 0], [0, 1]]))
 
@@ -204,10 +205,10 @@ def random_clifford_T_unitary_from_sequence(nqubits, ngates, t_proportion):
     sequence = random_clifford_sequence(nqubits, ngates)
     doped_sequence = t_doping(sequence, t_proportion)
     U = full_matrix(nqubits, doped_sequence)
-    return U
+    return U, doped_sequence
 
-unitary = full_matrix(nqubits, doped_sequence)
-print("Circuit unitary:\n", np.asarray(unitary).round(5))
+# unitary = full_matrix(nqubits, doped_sequence)
+# print("Circuit unitary:\n", np.asarray(unitary).round(5))
 
 def get_hamiltonian(unitary, timestep):
     """Compute the Hamiltonian from the unitary."""
@@ -365,6 +366,26 @@ def ising_hamiltonian(nqubits, J=1.0, Bz=0.0, Bx=1.0):
     for j in range(nqubits):
         H += Bx * pauli_operator(X, j, nqubits)
     return H
+
+def generate_all_pauli_observables(nqubits):
+    """Generate all Pauli observables for nqubits."""
+    paulis = [I2, X, Y, Z]
+    # pauli_names = ['I', 'X', 'Y', 'Z']
+    observables = []
+    for i in range(1, 4**nqubits):
+        ops = []
+        # ops_names = []
+        index = i
+        for _ in range(nqubits):
+            ops.append(paulis[index % 4])
+            # ops_names.append(pauli_names[index % 4])
+            index //= 4
+        # print(ops_names)
+        obs = ops[0]
+        for op in ops[1:]:
+            obs = sp.kron(obs, op, format='csc')
+        observables.append(obs)
+    return observables
 
 # n_accessible = 4
 # n_hidden = nqubits - n_accessible
