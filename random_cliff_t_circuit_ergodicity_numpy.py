@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.sparse as sp
 import scipy.linalg as sla
+from qiskit import QuantumCircuit, synthesis
 
 # def random_2_qubit_gate_sequence(i, j, depth, p_T):
 #     """Generate a random sequence of gates."""
@@ -366,6 +367,47 @@ def ising_hamiltonian(nqubits, J=1.0, Bz=0.0, Bx=1.0):
     for j in range(nqubits):
         H += Bx * pauli_operator(X, j, nqubits)
     return H
+
+def ising_unitary_circuit_trotterstep_approximated(nqubits, J = -1.0, Bz = 0.7, Bx = 1.5, timestep = 1.0, nsteps=1, epsilon=1e-8):
+    """
+    Build a transverse-field Ising Hamiltonian evolution for nqubits:
+
+    H =  J * sum_{j=0..N-2} Z_j Z_{j+1}
+        + Bz * sum_{j=0..N-1} Z_j
+        + Bx * sum_{j=0..N-1} X_j
+    """
+    qc = QuantumCircuit(nqubits)
+
+    for _ in range(nsteps):
+
+        # ZZ interactions
+        for j in range(nqubits - 1):
+            qc.cx(j, j + 1)
+            rzsynth = synthesis.gridsynth_rz(2 * J * timestep, epsilon=epsilon)
+            qc.append(rzsynth.to_instruction(), [j + 1])
+            qc.cx(j, j + 1)
+
+        # Bz Z fields
+        for j in range(nqubits):
+            rzsynth = synthesis.gridsynth_rz(2 * Bz * timestep, epsilon=epsilon)
+            qc.append(rzsynth.to_instruction(), [j])
+
+        # Bx X fields
+        for j in range(nqubits):
+            qc.h(j)
+            rzsynth = synthesis.gridsynth_rz(2 * Bx * timestep, epsilon=epsilon)
+            qc.append(rzsynth.to_instruction(), [j])
+            qc.h(j)
+        
+    return qc
+
+def count_n_Tgates(circuit):
+    """Count the number of T-gates in a Qiskit circuit."""
+    t_count = 0
+    for instr, qargs, cargs in circuit.data:
+        if instr.name == 't':
+            t_count += 1
+    return t_count
 
 def generate_all_pauli_observables(nqubits):
     """Generate all Pauli observables for nqubits."""

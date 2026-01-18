@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.sparse as sp
-from qiskit import QuantumCircuit, transpile
+from qiskit import QuantumCircuit, synthesis
 from qiskit_aer import AerSimulator
 from qiskit_aer.noise import NoiseModel, pauli_error
 import pickle
