@@ -5,7 +5,7 @@ from qiskit.quantum_info import Statevector
 
 def steane_code_circuit() -> QuantumCircuit:
     """
-    Constructs the Steane code circuit for encoding a single logical qubit on qubit index 3.
+    Constructs the Steane code circuit for encoding a single logical qubit on qubit index 6.
 
     Returns:
         QuantumCircuit: A quantum circuit that encodes a single logical qubit using the Steane code.
@@ -20,17 +20,17 @@ def steane_code_circuit() -> QuantumCircuit:
     steane_circuit.h(2)
 
     # Step 2: Entangle qubits to form the logical |0_L> and |1_L> states
-    steane_circuit.cx(3, 5)
-    steane_circuit.cx(3, 6)
-    steane_circuit.cx(0, 3)
-    steane_circuit.cx(0, 4)
+    steane_circuit.cx(6, 5)
+    steane_circuit.cx(6, 4)
+    steane_circuit.cx(0, 6)
     steane_circuit.cx(0, 5)
-    steane_circuit.cx(1, 4)
-    steane_circuit.cx(1, 5)
+    steane_circuit.cx(0, 3)
     steane_circuit.cx(1, 6)
-    steane_circuit.cx(2, 3)
+    steane_circuit.cx(1, 4)
+    steane_circuit.cx(1, 3)
+    steane_circuit.cx(2, 5)
     steane_circuit.cx(2, 4)
-    steane_circuit.cx(2, 6)
+    steane_circuit.cx(2, 3)
 
     return steane_circuit
 
@@ -55,11 +55,12 @@ def steane_code_encoding_circuit(initial_state: QuantumCircuit) -> QuantumCircui
 
     return encoded_state
 
-# initial_state = QuantumCircuit(7)
+initial_state = QuantumCircuit(7)
 # # initial_state.h(3)  # Example initial state |+>
 # # initial_state.t(0)  # Apply T-gate to the initial state
 
-# steane_encoded_ht_state = steane_code_encoding_circuit(initial_state)
+qc = steane_code_encoding_circuit(initial_state)
+qc.measure_all()
 
 # for i in range(7):
 #     steane_encoded_ht_state.h(i)
@@ -69,3 +70,11 @@ def steane_code_encoding_circuit(initial_state: QuantumCircuit) -> QuantumCircui
 
 # print("Encoded state dimension:", len(encoded))
 # print("Encoded state vector:", encoded)
+
+# Transpile for simulator
+simulator = Aer.get_backend('aer_simulator')
+qc = transpile(qc, simulator)
+# Run and get unitary
+result = simulator.run(qc, shots=1000).result()
+counts = result.get_counts(qc)
+print("Measurement results:", counts)
