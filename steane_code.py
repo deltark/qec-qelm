@@ -2,6 +2,10 @@ import numpy as np
 from qiskit_aer import Aer, AerSimulator
 from qiskit import QuantumCircuit, transpile
 from qiskit.quantum_info import Statevector
+from qiskit.circuit.library.standard_gates import HGate, SGate, CXGate, TGate
+
+perfect_hgate = HGate(label='h1')
+perfect_cnot = CXGate(label='cnot1')
 
 def steane_code_circuit() -> QuantumCircuit:
     """
@@ -15,22 +19,22 @@ def steane_code_circuit() -> QuantumCircuit:
 
     # Encoding steps for the Steane code
     # Step 1: Create superposition states
-    steane_circuit.h(0)
-    steane_circuit.h(1)
-    steane_circuit.h(2)
+    steane_circuit.append(perfect_hgate, [0])
+    steane_circuit.append(perfect_hgate, [1])
+    steane_circuit.append(perfect_hgate, [2])
 
     # Step 2: Entangle qubits to form the logical |0_L> and |1_L> states
-    steane_circuit.cx(6, 5)
-    steane_circuit.cx(6, 4)
-    steane_circuit.cx(0, 6)
-    steane_circuit.cx(0, 5)
-    steane_circuit.cx(0, 3)
-    steane_circuit.cx(1, 6)
-    steane_circuit.cx(1, 4)
-    steane_circuit.cx(1, 3)
-    steane_circuit.cx(2, 5)
-    steane_circuit.cx(2, 4)
-    steane_circuit.cx(2, 3)
+    steane_circuit.append(perfect_cnot, (6, 5))
+    steane_circuit.append(perfect_cnot, (6, 4))
+    steane_circuit.append(perfect_cnot, (0, 6))
+    steane_circuit.append(perfect_cnot, (0, 5))
+    steane_circuit.append(perfect_cnot, (0, 3))
+    steane_circuit.append(perfect_cnot, (1, 6))
+    steane_circuit.append(perfect_cnot, (1, 4))
+    steane_circuit.append(perfect_cnot, (1, 3))
+    steane_circuit.append(perfect_cnot, (2, 5))
+    steane_circuit.append(perfect_cnot, (2, 4))
+    steane_circuit.append(perfect_cnot, (2, 3))
 
     return steane_circuit
 
@@ -55,26 +59,26 @@ def steane_code_encoding_circuit(initial_state: QuantumCircuit) -> QuantumCircui
 
     return encoded_state
 
-initial_state = QuantumCircuit(7)
-# # initial_state.h(3)  # Example initial state |+>
-# # initial_state.t(0)  # Apply T-gate to the initial state
+# initial_state = QuantumCircuit(7)
+# # # initial_state.append(perfect_hgate, 3)  # Example initial state |+>
+# # # initial_state.t(0)  # Apply T-gate to the initial state
 
-qc = steane_code_encoding_circuit(initial_state)
-qc.measure_all()
+# qc = steane_code_encoding_circuit(initial_state)
+# qc.measure_all()
 
-# for i in range(7):
-#     steane_encoded_ht_state.h(i)
+# # for i in range(7):
+# #     steane_encoded_ht_state.append(perfect_hgate, i)
 
-# state = Statevector(steane_encoded_ht_state)
-# encoded = np.array(state.data).round(5)
+# # state = Statevector(steane_encoded_ht_state)
+# # encoded = np.array(state.data).round(5)
 
-# print("Encoded state dimension:", len(encoded))
-# print("Encoded state vector:", encoded)
+# # print("Encoded state dimension:", len(encoded))
+# # print("Encoded state vector:", encoded)
 
-# Transpile for simulator
-simulator = Aer.get_backend('aer_simulator')
-qc = transpile(qc, simulator)
-# Run and get unitary
-result = simulator.run(qc, shots=1000).result()
-counts = result.get_counts(qc)
-print("Measurement results:", counts)
+# # Transpile for simulator
+# simulator = Aer.get_backend('aer_simulator')
+# qc = transpile(qc, simulator)
+# # Run and get unitary
+# result = simulator.run(qc, shots=1000).result()
+# counts = result.get_counts(qc)
+# print("Measurement results:", counts)
