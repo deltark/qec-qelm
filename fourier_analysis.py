@@ -5,7 +5,7 @@ from random_cliff_t_circuit_ergodicity_numpy import compute_fourier_coeffs, lift
 import matplotlib.pyplot as plt
 import plothist
 
-nqubits = 3
+nqubits = 2
 
 # X = sp.csc_matrix([[0, 1], [1, 0]])
 # Z = sp.csc_matrix([[1, 0], [0, -1]])
@@ -17,7 +17,7 @@ list_p_T = [0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35]
 max_acc = []
 res_acc=[]
 var_acc=[]
-for n_accessible in [1, 2]:
+for n_accessible in [1]:
     n_hidden = nqubits - n_accessible
 
     # for pauli in pauli_list:
@@ -66,6 +66,7 @@ for n_accessible in [1, 2]:
         max_index = np.argmax(fourier_expressivities)
         max_expressivity_unitaries.append(unitaries[max_index])
         max_expressivity_sequence.append(data['sequences'][max_index])
+        print(f'Max expressivity sequence for p_T={p_T}: {data["sequences"][max_index]}')
         print(f'Max Fourier expressivity: {max_expressivity} at index {max_index}')
 
 

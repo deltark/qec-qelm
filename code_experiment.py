@@ -2,7 +2,7 @@ import numpy as np
 import pickle
 from qiskit_aer import Aer, AerSimulator
 from qiskit.circuit.library.standard_gates import HGate, SGate, CXGate, TGate
-from qiskit_aer.noise import NoiseModel, pauli_error
+from qiskit_aer.noise import NoiseModel, pauli_error, depolarizing_error
 from qiskit import QuantumCircuit, transpile, QuantumRegister, ClassicalRegister
 from qiskit.quantum_info import Statevector
 from qiskit.circuit.classical import expr
@@ -10,48 +10,47 @@ from steane_code import steane_code_encoding_circuit, steane_code_circuit
 from random_cliff_t_circuit_ergodicity_numpy import beta_k
 import scipy.sparse as sp
 
+nqubits = 2
+
 Z = sp.csc_matrix(np.array([[1, 0], [0, -1]]))
 
 perfect_hgate = HGate(label='h1')
 perfect_cnot = CXGate(label='cnot1')
 
-filename = 'results/fourier_analysis/fourier_expressivity_from_sequence_n3.pkl'
+filename = f'results/fourier_analysis/fourier_expressivity_from_sequence_n{nqubits}.pkl'
 with open(filename, 'rb') as f:
     data = pickle.load(f)
 p_T_values = data['p_T_values']
 max_expressivity_unitaries_per_pT = data['max_expressivity_unitaries_per_pT']
 sequences_per_pT = data['max_expressivity_sequences_per_pT']
 
-nqubits = 3
 nphysical_qubits = 7 * nqubits  # Each logical qubit is encoded into 7 physical qubits using the Steane code
+
+##bitstrings in logical 1 state of Steane code
+logical_1_states = ['1111111', '0101010', '1001100', '0011001', '1110000', '0100101', '1000011', '0010110']
+##bitstrings that are within distance 1 of logical 1 state
+error_states = []
+for state in logical_1_states:
+    error_states.append(state)
+    for i in range(7):
+        flipped_bit = '1' if state[i] == '0' else '0'
+        error_state = state[:i] + flipped_bit + state[i+1:]
+        error_states.append(error_state)
+#convert to integers
+error_states_int = [int(state, 2) for state in error_states]
+# print(f'Error states (int): {error_states_int}')
 
 for x in np.arange(0, 1, 0.2):
 
-    ##bitstrings in logical 1 state of Steane code
-    logical_1_states = ['1111111', '0101010', '1001100', '0011001', '1110000', '0100101', '1000011', '0010110']
-    ##bitstrings that are within distance 1 of logical 1 state
-    error_states = []
-    for state in logical_1_states:
-        error_states.append(state)
-        for i in range(7):
-            flipped_bit = '1' if state[i] == '0' else '0'
-            error_state = state[:i] + flipped_bit + state[i+1:]
-            error_states.append(error_state)
-    #convert to integers
-    error_states_int = [int(state, 2) for state in error_states]
-    # print(f'Error states (int): {error_states_int}')
-
-
-
     reg1 = QuantumRegister(7, 'q')
     reg2 = QuantumRegister(7, 'r')
-    reg3 = QuantumRegister(7, 's')
+    # reg3 = QuantumRegister(7, 's')
     ancilla = QuantumRegister(7, 'a')
     creg = ClassicalRegister(7, 'c')
 
-    register_list = [reg1, reg2, reg3]
+    register_list = [reg1, reg2]
 
-    qc = QuantumCircuit(reg1, reg2, reg3, ancilla, creg)
+    qc = QuantumCircuit(reg1, reg2, ancilla, creg)
 
     # #create a classical register for every error state value
     # for error in error_states_int:
@@ -122,16 +121,23 @@ for x in np.arange(0, 1, 0.2):
 
     # Run on noisy simulator (Pauli noise model)
 
-    for error_prob in [0.0, 0.01, 0.03, 0.07, 0.1]:
-        error = pauli_error([('I', 1 - error_prob), ('X', error_prob / 3), ('Y', error_prob / 3), ('Z', error_prob / 3)])
+    # for error_prob in [0.0, 0.01, 0.03, 0.07, 0.1]:
+    # for error_prob in [0.5, 0.9]:
+    for error_prob in [0.0, 0.0001, 0.001, 0.01]:
+        error = depolarizing_error(error_prob, 1)
+        error2 = depolarizing_error(error_prob, 2)
+        # error = pauli_error([('I', 1 - error_prob), ('X', error_prob / 3), ('Y', error_prob / 3), ('Z', error_prob / 3)])
+        # error2 = error.tensor(error)
         noise_model = NoiseModel()
-        noise_model.add_all_qubit_quantum_error(error, ['h', 's', 'cx', 'x'])
+        noise_model.add_all_qubit_quantum_error(error, ['h', 's', 'x'])
+        noise_model.add_all_qubit_quantum_error(error2, ['cx'])
 
-        compiled_circuit = transpile(qc, simulator)
-        result = simulator.run(compiled_circuit, noise_model=noise_model, shots=100).result()
+        # compiled_circuit = transpile(qc, simulator)
+        # print(compiled_circuit.data)
+        result = simulator.run(qc, noise_model=noise_model, shots=30).result()
         counts = result.get_counts()
 
-        filename = f'results/circuit_runs/steane_code_3logqubits_errorprob{error_prob}_x{x:.2f}.pkl'
+        filename = f'results/circuit_runs/steane_code_{nqubits}logqubits_errorprob{error_prob}_x{x:.2f}.pkl'
         with open(filename, 'wb') as f:
             pickle.dump(counts, f)
         

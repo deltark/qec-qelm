@@ -8,6 +8,7 @@ def createanddumprandomcircuits(nqubits, ngates, p_T):
     sequences = []
     for _ in range(num_unitaries):
         U, sequence = random_clifford_T_unitary_from_sequence(nqubits, ngates, p_T)
+        print("Sequence:", sequence)
         U = U.toarray()
         print(U)
         avg_ratio_value = get_average_ratio_of_adjacent_gaps(U)
@@ -25,7 +26,6 @@ def createanddumprandomcircuits(nqubits, ngates, p_T):
         pickle.dump(dict, f)
 
 
-for n in [3]:
-    ngates = 10*n**2
+for n in [2]:
     for p_T in [0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35]:
-        createanddumprandomcircuits(nqubits=n, ngates=ngates, p_T=p_T)
+        createanddumprandomcircuits(nqubits=n, ngates=10*n**2, p_T=p_T)

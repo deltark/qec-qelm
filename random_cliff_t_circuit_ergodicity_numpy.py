@@ -39,11 +39,16 @@ def t_doping(sequence, t_proportion):
     t_count = int(len(sequence) * t_proportion)
     doped_sequence = sequence.copy()
     positions_to_replace = np.random.choice(len(doped_sequence), t_count, replace=False)
+    finaltcount = 0
     for pos in positions_to_replace:
         if doped_sequence[pos][0] == 'CNOT':
             doped_sequence[pos] = ('T', doped_sequence[pos][2])  # Replace CNOT with T on target qubit
+            finaltcount += 1
         else:
             doped_sequence[pos]= ('T', doped_sequence[pos][1])  # Replace single qubit gate with T
+            finaltcount += 1
+    print(f"Inserted {finaltcount} T-gates into the sequence.")
+    
     return doped_sequence
 
 # nqubits = 8
