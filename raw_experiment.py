@@ -7,10 +7,10 @@ from qiskit import QuantumCircuit, transpile, QuantumRegister, ClassicalRegister
 from random_cliff_t_circuit_ergodicity_numpy import beta_k
 import scipy.sparse as sp
 
-nqubits = 3
+nqubits = 2
 Z = sp.csc_matrix(np.array([[1, 0], [0, -1]]))
 
-simulator = Aer.get_backend('aer_simulator')
+simulator = AerSimulator(method = 'statevector')
 
 perfect_hgate = HGate(label='h1')
 perfect_cnot = CXGate(label='cnot1')
@@ -44,9 +44,10 @@ for x in np.arange(0, 1, 0.2):
             qc.s(inst[1])
 
     # qc.h(qreg[0])
+    # qc.save_statevector()
     qc.measure(qreg[0], creg[0])
 
-    print(qc)
+    # print(qc)
 
 
     for error_prob in [0.0, 0.0001, 0.001, 0.01, 0.1]:
@@ -60,11 +61,15 @@ for x in np.arange(0, 1, 0.2):
 
             # compiled_circuit = transpile(qc, simulator)
             # print(compiled_circuit.data)
-            result = simulator.run(qc, noise_model=noise_model, shots=5000).result()
+            nshots = 750
+            result = simulator.run(qc, noise_model=noise_model, shots=nshots).result()
+            # result = simulator.run(qc).result()
             counts = result.get_counts()
+            # state = result.get_statevector()
+            # print(state)
 
-            filename = f'results/circuit_runs/raw_{nqubits}qubits_errorprob{error_prob}_x{x:.2f}.pkl'
+            filename = f'results/circuit_runs/raw_{nqubits}qubits_errorprob{error_prob}_x{x:.2f}_{nshots}shots.pkl'
             with open(filename, 'wb') as f:
                 pickle.dump(counts, f)
             
-            print(f'Error prob: {error_prob}, x: {x:.2f}, Measurement results:', counts)
+            # print(f'Error prob: {error_prob}, x: {x:.2f}, Measurement results:', counts)

@@ -4,7 +4,7 @@ from qiskit_aer import Aer, AerSimulator
 from qiskit.circuit.library.standard_gates import HGate, SGate, CXGate, TGate
 from qiskit_aer.noise import NoiseModel, pauli_error, depolarizing_error
 from qiskit import QuantumCircuit, transpile, QuantumRegister, ClassicalRegister
-from qiskit.quantum_info import Statevector
+from qiskit.quantum_info import Statevector, partial_trace
 from qiskit.circuit.classical import expr
 from steane_code import steane_code_encoding_circuit, steane_code_circuit
 from random_cliff_t_circuit_ergodicity_numpy import beta_k
@@ -24,33 +24,30 @@ p_T_values = data['p_T_values']
 max_expressivity_unitaries_per_pT = data['max_expressivity_unitaries_per_pT']
 sequences_per_pT = data['max_expressivity_sequences_per_pT']
 
-nphysical_qubits = 7 * nqubits  # Each logical qubit is encoded into 7 physical qubits using the Steane code
+# nphysical_qubits = 7 * nqubits  # Each logical qubit is encoded into 7 physical qubits using the Steane code
 
-##bitstrings in logical 1 state of Steane code
-logical_1_states = ['1111111', '0101010', '1001100', '0011001', '1110000', '0100101', '1000011', '0010110']
-##bitstrings that are within distance 1 of logical 1 state
-error_states = []
-for state in logical_1_states:
-    error_states.append(state)
-    for i in range(7):
-        flipped_bit = '1' if state[i] == '0' else '0'
-        error_state = state[:i] + flipped_bit + state[i+1:]
-        error_states.append(error_state)
-#convert to integers
-error_states_int = [int(state, 2) for state in error_states]
-# print(f'Error states (int): {error_states_int}')
+filename = f'results/circuit_runs/error_states_int.pkl'
+with open(filename, 'rb') as f:
+    error_states_int = pickle.load(f)
 
-for x in np.arange(0, 1, 0.2):
+for x in np.arange(0.0, 1.0, 0.2):
+# for x in [0.4]:
 
-    reg1 = QuantumRegister(7, 'q')
-    reg2 = QuantumRegister(7, 'r')
+# def run_steane_code_experiment(x, prob_error, p_T_index):
+
+    # reg1 = QuantumRegister(7, 'q')
+    # reg2 = QuantumRegister(7, 'r')
     # reg3 = QuantumRegister(7, 's')
+    #define as many registers as logical qubits
+    register_list = []
+    for i in range(nqubits):
+        register_list.append(QuantumRegister(7, f'q{i}'))
     ancilla = QuantumRegister(7, 'a')
     creg = ClassicalRegister(7, 'c')
 
-    register_list = [reg1, reg2]
+    # register_list = [reg1, reg2]
 
-    qc = QuantumCircuit(reg1, reg2, ancilla, creg)
+    qc = QuantumCircuit(*register_list, ancilla, creg)
 
     # #create a classical register for every error state value
     # for error in error_states_int:
@@ -62,7 +59,7 @@ for x in np.arange(0, 1, 0.2):
 
     initial_state = QuantumCircuit(7)
     initial_state.append(perfect_hgate, [6])
-    initial_state.rz(2*beta_k(0)*x, 6)
+    initial_state.rz(2*np.pi*beta_k(0)*x, 6)
     # Here we can set the initial state for each logical qubit if needed
     steane_encoded = steane_code_encoding_circuit(initial_state)
     qc.compose(steane_encoded, qubits=register_list[0], inplace=True)
@@ -73,7 +70,7 @@ for x in np.arange(0, 1, 0.2):
         steane_encoded = steane_code_encoding_circuit(initial_state)
         qc.compose(steane_encoded, qubits=register_list[i], inplace=True)
 
-    for inst in sequences_per_pT[4]:
+    for inst in sequences_per_pT[5]:
         if inst[0] == 'H':
             for i in range(7):
                 qc.h(register_list[inst[1]][i])
@@ -94,17 +91,20 @@ for x in np.arange(0, 1, 0.2):
             for i in range(7):
                 qc.append(perfect_cnot, (ancilla[i], register_list[inst[1]][i]))
             qc.measure(register_list[inst[1]], creg)
-            # Conditional S-gate based on measurement outcome
+            # Conditional SX-gate based on measurement outcome
             for error in error_states_int:
                 with qc.if_test((creg, error)):
                     for i in range(7):
+                        qc.x(ancilla[i])
                         for _ in range(3): # Transversal S-gate is 3 layers of S
                             qc.s(ancilla[i])
-                        qc.x(ancilla[i])
             # Swap ancilla back to the logical qubit
             for i in range(7):
                 qc.swap(ancilla[i], register_list[inst[1]][i])
 
+    # for reg in register_list:
+    #     qc.compose(steane_code_circuit().inverse(), reg, inplace=True)
+    # qc.save_statevector()
     qc.measure(register_list[0], creg)
 
 
@@ -112,8 +112,9 @@ for x in np.arange(0, 1, 0.2):
 
     # Transpile for simulator
     simulator = Aer.get_backend('aer_simulator')
+    # simulator = AerSimulator(method = 'statevector')
     # qc = transpile(qc, simulator)
-    # # Run and get unitary
+    #
     # result = simulator.run(qc, shots=1).result()
     # counts = result.get_counts(qc)
     # print("Measurement results:", counts)
@@ -123,7 +124,8 @@ for x in np.arange(0, 1, 0.2):
 
     # for error_prob in [0.0, 0.01, 0.03, 0.07, 0.1]:
     # for error_prob in [0.5, 0.9]:
-    for error_prob in [0.0, 0.0001, 0.001, 0.01]:
+    for error_prob in [0.0, 0.0001, 0.001, 0.01, 0.1]:
+    # for error_prob in [0.0]:
         error = depolarizing_error(error_prob, 1)
         error2 = depolarizing_error(error_prob, 2)
         # error = pauli_error([('I', 1 - error_prob), ('X', error_prob / 3), ('Y', error_prob / 3), ('Z', error_prob / 3)])
@@ -134,13 +136,23 @@ for x in np.arange(0, 1, 0.2):
 
         # compiled_circuit = transpile(qc, simulator)
         # print(compiled_circuit.data)
-        result = simulator.run(qc, noise_model=noise_model, shots=30).result()
+        result = simulator.run(qc, noise_model=noise_model, shots=80).result()
         counts = result.get_counts()
 
         filename = f'results/circuit_runs/steane_code_{nqubits}logqubits_errorprob{error_prob}_x{x:.2f}.pkl'
+        with open(filename, 'rb') as f:
+            data = pickle.load(f)
+
+        #add counts to existing data
+        for key, value in counts.items():
+            if key in data:
+                data[key] += value
+            else:
+                data[key] = value
+
         with open(filename, 'wb') as f:
-            pickle.dump(counts, f)
-        
+            pickle.dump(data, f)
+
         print(f'Error prob: {error_prob}, x: {x:.2f}, Measurement results:', counts)
 
         # plt.plot(range(len(counts)), list(counts.values()), label=f'Error prob: {error_prob}')
