@@ -154,5 +154,7 @@ if __name__ == '__main__':
         for x in np.arange(0.0, 1.0, 0.2):
             tasks.append((pT_index, error_prob, x))
 
+    print("Using 25 worker processes")
+
     with Pool(25) as p:
         p.starmap(f, tasks)

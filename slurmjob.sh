@@ -7,4 +7,7 @@
 #SBATCH --cpus-per-task=25
 #SBATCH --mem=64G
 
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+
 python code_experiment_cluster.py
