@@ -61,7 +61,7 @@ for x in np.arange(0, 1, 0.2):
 
             # compiled_circuit = transpile(qc, simulator)
             # print(compiled_circuit.data)
-            nshots = 750
+            nshots = 100
             result = simulator.run(qc, noise_model=noise_model, shots=nshots).result()
             # result = simulator.run(qc).result()
             counts = result.get_counts()

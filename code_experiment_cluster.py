@@ -1,14 +1,15 @@
 import numpy as np
 import pickle
 from qiskit_aer import Aer, AerSimulator
-from qiskit.circuit.library.standard_gates import HGate, SGate, CXGate, TGate
-from qiskit_aer.noise import NoiseModel, pauli_error, depolarizing_error
-from qiskit import QuantumCircuit, transpile, QuantumRegister, ClassicalRegister
-from qiskit.quantum_info import Statevector, partial_trace
-from qiskit.circuit.classical import expr
-from steane_code import steane_code_encoding_circuit, steane_code_circuit, t_gate_teleportation
+from qiskit.circuit.library.standard_gates import HGate, CXGate
+from qiskit_aer.noise import NoiseModel, depolarizing_error
+from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
+# from qiskit.quantum_info import Statevector, partial_trace
+# from qiskit.circuit.classical import expr #classical information
+from steane_code import steane_code_encoding_circuit, t_gate_teleportation
 from random_cliff_t_circuit_ergodicity_numpy import beta_k
 import scipy.sparse as sp
+from multiprocessing import Pool
 
 nqubits = 2
 
@@ -30,7 +31,7 @@ filename = f'results/circuit_runs/error_states_int.pkl'
 with open(filename, 'rb') as f:
     error_states_int = pickle.load(f)
 
-for x in np.arange(0.0, 1.0, 0.2):
+def f(pT_index, error_prob, x):
 # for x in [0.4]:
 
 # def run_steane_code_experiment(x, prob_error, p_T_index):
@@ -70,7 +71,7 @@ for x in np.arange(0.0, 1.0, 0.2):
         steane_encoded = steane_code_encoding_circuit(initial_state)
         qc.compose(steane_encoded, qubits=register_list[i], inplace=True)
 
-    for inst in sequences_per_pT[5]:
+    for inst in sequences_per_pT[pT_index]:
         if inst[0] == 'H':
             for i in range(7):
                 qc.h(register_list[inst[1]][i])
@@ -108,35 +109,47 @@ for x in np.arange(0.0, 1.0, 0.2):
 
     # for error_prob in [0.0, 0.01, 0.03, 0.07, 0.1]:
     # for error_prob in [0.5, 0.9]:
-    for error_prob in [0.0, 0.0001, 0.001, 0.01, 0.1]:
+    # for error_prob in [0.0, 0.0001, 0.001, 0.01, 0.1]:
     # for error_prob in [0.0]:
-        error = depolarizing_error(error_prob, 1)
-        error2 = depolarizing_error(error_prob, 2)
-        # error = pauli_error([('I', 1 - error_prob), ('X', error_prob / 3), ('Y', error_prob / 3), ('Z', error_prob / 3)])
-        # error2 = error.tensor(error)
-        noise_model = NoiseModel()
-        noise_model.add_all_qubit_quantum_error(error, ['h', 's', 'x'])
-        noise_model.add_all_qubit_quantum_error(error2, ['cx'])
+    error = depolarizing_error(error_prob, 1)
+    error2 = depolarizing_error(error_prob, 2)
+    # error = pauli_error([('I', 1 - error_prob), ('X', error_prob / 3), ('Y', error_prob / 3), ('Z', error_prob / 3)])
+    # error2 = error.tensor(error)
+    noise_model = NoiseModel()
+    noise_model.add_all_qubit_quantum_error(error, ['h', 's', 'x'])
+    noise_model.add_all_qubit_quantum_error(error2, ['cx'])
 
-        # compiled_circuit = transpile(qc, simulator)
-        # print(compiled_circuit.data)
-        result = simulator.run(qc, noise_model=noise_model, shots=500).result()
-        counts = result.get_counts()
+    # compiled_circuit = transpile(qc, simulator)
+    # print(compiled_circuit.data)
+    result = simulator.run(qc, noise_model=noise_model, shots=500).result()
+    counts = result.get_counts()
 
-        filename = f'results/circuit_runs/steane_code_{nqubits}logqubits_errorprob{error_prob}_x{x:.2f}.pkl'
-        with open(filename, 'rb') as f:
-            data = pickle.load(f)
+    filename = f'results/circuit_runs/steane_code_{nqubits}logqubits_errorprob{error_prob}_x{x:.2f}.pkl'
+    with open(filename, 'rb') as f:
+        data = pickle.load(f)
 
-        #add counts to existing data
-        for key, value in counts.items():
-            if key in data:
-                data[key] += value
-            else:
-                data[key] = value
+    #add counts to existing data
+    for key, value in counts.items():
+        if key in data:
+            data[key] += value
+        else:
+            data[key] = value
 
-        with open(filename, 'wb') as f:
-            pickle.dump(data, f)
+    with open(filename, 'wb') as f:
+        pickle.dump(data, f)
 
-        print(f'Error prob: {error_prob}, x: {x:.2f}, Measurement results:', counts)
+    print(f'Error prob: {error_prob}, x: {x:.2f}, Measurement results:', counts)
 
         # plt.plot(range(len(counts)), list(counts.values()), label=f'Error prob: {error_prob}')
+
+
+if __name__ == '__main__':
+
+    tasks = []
+    for pT_index in range(1,6):
+        for error_prob in [0.0, 0.0001, 0.001, 0.01, 0.1]:
+            for x in np.arange(0.0, 1.0, 0.2):
+                tasks.append(pT_index, error_prob, x)
+
+    with Pool() as p:
+        p.starmap(f, tasks)

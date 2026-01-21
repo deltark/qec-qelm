@@ -98,13 +98,13 @@ for error_prob in [0.0, 0.0001, 0.001, 0.01, 0.1]:
         # print(f'For error probability {error_prob} and x={x:.2f}, average count for code states: {average_result}')
             # print(f'Number of code states counted: {nb_codestates}')
             # print('/n')
-        # print(f'For error probability {error_prob} and x={x:.2f}:'
-        #       f'\n  Number of codestates counted: {nb_codestates}'
-        #       f'\n  Number of decodable states counted: {nb_decodable_states}'
-        #     #   f'\n  Number of discarded states: {nb_discarded_states}'
-        #       f'\n  Unencoded counts: {unencoded_counts}')
+        print(f'For error probability {error_prob} and x={x:.2f}:'
+              f'\n  Number of codestates counted: {nb_codestates}'
+              f'\n  Number of decodable states counted: {nb_decodable_states}'
+            #   f'\n  Number of discarded states: {nb_discarded_states}'
+              f'\n  Unencoded counts: {unencoded_counts}')
     
-    print(output_values)
+    # print(output_values)
     # print("Shots var", output_variance)
 
     for key in output_values.keys():
