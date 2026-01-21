@@ -13,6 +13,7 @@ from multiprocessing import Pool
 
 nqubits = 2
 nshots = 1000
+pT_index = 5
 
 Z = sp.csc_matrix(np.array([[1, 0], [0, -1]]))
 
@@ -126,18 +127,18 @@ def f(pT_index, error_prob, x):
     counts = result.get_counts()
 
     filename = f'results/circuit_runs/steane_code_{nqubits}logqubits_pT{p_T_values[pT_index]}_errorprob{error_prob}_x{x:.2f}.pkl'
-    with open(filename, 'rb') as f:
-        data = pickle.load(f)
+    # with open(filename, 'rb') as f:
+    #     data = pickle.load(f)
 
-    #add counts to existing data
-    for key, value in counts.items():
-        if key in data:
-            data[key] += value
-        else:
-            data[key] = value
+    # #add counts to existing data
+    # for key, value in counts.items():
+    #     if key in data:
+    #         data[key] += value
+    #     else:
+    #         data[key] = value
 
     with open(filename, 'wb') as f:
-        pickle.dump(data, f)
+        pickle.dump(counts, f)
 
     print(f'Error prob: {error_prob}, x: {x:.2f}, Measurement results:', counts)
 
@@ -147,10 +148,10 @@ def f(pT_index, error_prob, x):
 if __name__ == '__main__':
  
     tasks = []
-    for pT_index in range(1,6):
-        for error_prob in [0.0, 0.0001, 0.001, 0.01, 0.1]:
-            for x in np.arange(0.0, 1.0, 0.2):
-                tasks.append((pT_index, error_prob, x))
+    # for pT_index in range(1,6):
+    for error_prob in [0.0, 0.0001, 0.001, 0.01, 0.1]:
+        for x in np.arange(0.0, 1.0, 0.2):
+            tasks.append((pT_index, error_prob, x))
 
     with Pool() as p:
         p.starmap(f, tasks)
