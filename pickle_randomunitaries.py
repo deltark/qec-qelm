@@ -2,7 +2,7 @@ import pickle
 from random_cliff_t_circuit_ergodicity_numpy import get_average_ratio_of_adjacent_gaps, random_clifford_T_unitary_from_sequence
 
 def createanddumprandomcircuits(nqubits, ngates, p_T):
-    num_unitaries = 20
+    num_unitaries = 100
     unitaries = []
     avg_ratio = []
     sequences = []
@@ -17,10 +17,13 @@ def createanddumprandomcircuits(nqubits, ngates, p_T):
         sequences.append(sequence)
 
     filename = f'results/random_circuit_from_sequence_n{nqubits}_ngates{ngates}_p{p_T}_new.pkl'
+    with open(filename, 'rb') as f:
+        data = pickle.load(f)
+
     dict = {
-        "unitaries": unitaries,
-        "sequences": sequences,
-        "avg_ratio": avg_ratio
+        "unitaries": data['unitaries'] + unitaries,
+        "sequences": data['sequences'] + sequences,
+        "avg_ratio": data['avg_ratio'] + avg_ratio
     }
     with open(filename, 'wb') as f:
         pickle.dump(dict, f)

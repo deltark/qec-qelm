@@ -11,6 +11,8 @@ from random_cliff_t_circuit_ergodicity_numpy import beta_k
 import scipy.sparse as sp
 
 nqubits = 2
+nshots = 10
+simulator = Aer.get_backend('aer_simulator')
 
 Z = sp.csc_matrix(np.array([[1, 0], [0, -1]]))
 
@@ -30,8 +32,8 @@ filename = f'results/circuit_runs/error_states_int.pkl'
 with open(filename, 'rb') as f:
     error_states_int = pickle.load(f)
 
-for x in np.arange(0.0, 1.0, 0.2):
-# for x in [0.4]:
+# for x in np.arange(0.0, 1.0, 0.2):
+for x in [0.4]:
 
 # def run_steane_code_experiment(x, prob_error, p_T_index):
 
@@ -95,7 +97,6 @@ for x in np.arange(0.0, 1.0, 0.2):
     # print(qc)
 
     # Transpile for simulator
-    simulator = Aer.get_backend('aer_simulator')
     # simulator = AerSimulator(method = 'statevector')
     # qc = transpile(qc, simulator)
     #
@@ -108,8 +109,8 @@ for x in np.arange(0.0, 1.0, 0.2):
 
     # for error_prob in [0.0, 0.01, 0.03, 0.07, 0.1]:
     # for error_prob in [0.5, 0.9]:
-    for error_prob in [0.0, 0.0001, 0.001, 0.01, 0.1]:
-    # for error_prob in [0.0]:
+    # for error_prob in [0.0, 0.0001, 0.001, 0.01, 0.1]:
+    for error_prob in [0.1]:
         error = depolarizing_error(error_prob, 1)
         error2 = depolarizing_error(error_prob, 2)
         # error = pauli_error([('I', 1 - error_prob), ('X', error_prob / 3), ('Y', error_prob / 3), ('Z', error_prob / 3)])
@@ -120,22 +121,22 @@ for x in np.arange(0.0, 1.0, 0.2):
 
         # compiled_circuit = transpile(qc, simulator)
         # print(compiled_circuit.data)
-        result = simulator.run(qc, noise_model=noise_model, shots=500).result()
+        result = simulator.run(qc, noise_model=noise_model, shots=nshots).result()
         counts = result.get_counts()
 
-        filename = f'results/circuit_runs/steane_code_{nqubits}logqubits_errorprob{error_prob}_x{x:.2f}.pkl'
-        with open(filename, 'rb') as f:
-            data = pickle.load(f)
+        # filename = f'results/circuit_runs/steane_code_{nqubits}logqubits_errorprob{error_prob}_x{x:.2f}.pkl'
+        # with open(filename, 'rb') as f:
+        #     data = pickle.load(f)
 
-        #add counts to existing data
-        for key, value in counts.items():
-            if key in data:
-                data[key] += value
-            else:
-                data[key] = value
+        # #add counts to existing data
+        # for key, value in counts.items():
+        #     if key in data:
+        #         data[key] += value
+        #     else:
+        #         data[key] = value
 
-        with open(filename, 'wb') as f:
-            pickle.dump(data, f)
+        # with open(filename, 'wb') as f:
+        #     pickle.dump(data, f)
 
         print(f'Error prob: {error_prob}, x: {x:.2f}, Measurement results:', counts)
 
