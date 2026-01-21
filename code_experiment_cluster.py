@@ -12,7 +12,7 @@ import scipy.sparse as sp
 from multiprocessing import Pool
 
 nqubits = 2
-nshots = 1000
+nshots = 100
 pT_index = 5
 
 Z = sp.csc_matrix(np.array([[1, 0], [0, -1]]))
@@ -144,6 +144,7 @@ def f(pT_index, error_prob, x):
 
         # plt.plot(range(len(counts)), list(counts.values()), label=f'Error prob: {error_prob}')
 
+# f(5, 0.0, 0.0)
 
 if __name__ == '__main__':
  
@@ -153,5 +154,5 @@ if __name__ == '__main__':
         for x in np.arange(0.0, 1.0, 0.2):
             tasks.append((pT_index, error_prob, x))
 
-    with Pool() as p:
+    with Pool(25) as p:
         p.starmap(f, tasks)
