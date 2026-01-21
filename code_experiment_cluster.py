@@ -14,7 +14,7 @@ from multiprocessing import Pool
 simulator = Aer.get_backend('aer_simulator')
 
 nqubits = 2
-nshots = 100
+nshots = 10
 pT_index = 5
 
 Z = sp.csc_matrix(np.array([[1, 0], [0, -1]]))
