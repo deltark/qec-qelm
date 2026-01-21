@@ -11,6 +11,8 @@ from random_cliff_t_circuit_ergodicity_numpy import beta_k
 import scipy.sparse as sp
 from multiprocessing import Pool
 
+simulator = Aer.get_backend('aer_simulator')
+
 nqubits = 2
 nshots = 100
 pT_index = 5
@@ -98,7 +100,7 @@ def f(pT_index, error_prob, x):
     # print(qc)
 
     # Transpile for simulator
-    simulator = Aer.get_backend('aer_simulator')
+    
     # simulator = AerSimulator(method = 'statevector')
     # qc = transpile(qc, simulator)
     #
