@@ -151,10 +151,12 @@ def f(pT_index, error_prob, x):
 if __name__ == '__main__':
  
     tasks = []
+    x = 0.6
     # for pT_index in range(1,6):
-    for error_prob in [0.0, 0.0001, 0.001, 0.01, 0.1]:
-        for x in np.arange(0.0, 1.0, 0.2):
-            tasks.append((pT_index, error_prob, x))
+    # for error_prob in [0.0, 0.0001, 0.001, 0.01, 0.1]:
+    for error_prob in [0.003, 0.005, 0.007, 0.009]:
+        # for x in np.arange(0.0, 1.0, 0.2):    
+        tasks.append((pT_index, error_prob, x))
 
     print("Using 25 worker processes")
 

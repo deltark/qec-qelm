@@ -5,7 +5,7 @@ from random_cliff_t_circuit_ergodicity_numpy import compute_fourier_coeffs, lift
 import matplotlib.pyplot as plt
 import plothist
 
-nqubits = 2
+nqubits = 3
 
 # X = sp.csc_matrix([[0, 1], [1, 0]])
 # Z = sp.csc_matrix([[1, 0], [0, -1]])
