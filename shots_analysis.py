@@ -5,6 +5,9 @@ import plothist
 
 nqubits = 3
 pT = 0.15
+# error_prob_list = [0.0, 0.0001, 0.001, 0.003, 0.005, 0.007, 0.009, 0.01, 0.1]
+error_prob_list = [0.0, 0.001, 0.00325, 0.00550, 0.00775, 0.01]
+# error_prob_list = [0.0, 0.0001, 0.001, 0.01, 0.1]
 
 ##bitstrings in logical 1 state of Steane code
 logical_1_states = ['1111111', '0101010', '1001100', '0011001', '1110000', '0100101', '1000011', '0010110']
@@ -47,7 +50,7 @@ mean = {'encoded': [], 'raw': []}
 # measured_states = np.sort([int(bitstring, 2) for bitstring in counts.keys()])
 # print(f'Measured states (int): {measured_states}')
 
-for error_prob in [0.0, 0.0001, 0.001, 0.01, 0.1]:
+for error_prob in error_prob_list:
 # for error_prob in [0.0]:
 
     output_values = {'encoded': [], 'raw': []}
@@ -56,7 +59,7 @@ for error_prob in [0.0, 0.0001, 0.001, 0.01, 0.1]:
 
     # for error_prob in [0.0, 0.01, 0.03, 0.07, 0.1]:
     # for x in np.arange(0.0, 1.0, 0.2):
-    for x in [0.4]:
+    for x in [0.2]:
         # ======= ENCODED =======
         # filename = f'results/circuit_runs/steane_code_{nqubits}logqubits_pT{pT}_errorprob{error_prob}_x{x:.2f}.pkl'
 
@@ -89,7 +92,7 @@ for error_prob in [0.0, 0.0001, 0.001, 0.01, 0.1]:
 
         # ======= RAW ==========
 
-        filename = f'results/circuit_runs/raw_{nqubits}qubits_pT{pT}_errorprob{error_prob}_x{x:.2f}_500shots.pkl'
+        filename = f'results/circuit_runs/raw_{nqubits}qubits_pT{pT}_errorprob{error_prob}_x{x:.2f}_1000shots.pkl'
         with open(filename, 'rb') as f:
             counts = pickle.load(f)
         average_result = (counts.get('0', 0) + counts.get('1', 0)*(-1)) / sum(counts.values())
@@ -135,21 +138,21 @@ print(f'Mean at error probability 0: encoded={mean["encoded"][0]}, raw={mean["ra
 
 plt.figure()
 # plt.hlines(var_exact, 0, 4, colors="black")
-plt.hlines(mean_exact, 0, 4, colors="black")
+plt.hlines(mean_exact, 0, 0.1, colors="black")
 # plt.hlines(mean_exact+var_exact, 0, 4, colors="grey")
 # plt.hlines(mean_exact-var_exact, 0, 4, colors="grey")
 # for key in variance.keys():
 #     # plt.plot(range(5), variance[key], label=key, marker='o')
-#     plt.errorbar([0, 1, 2, 3, 4], mean[key], yerr = variance[key], marker = 'x')
-plt.plot(range(5), mean['raw'], marker = "x")
+#     plt.plot(error_prob_list, mean[key], marker = 'x')
+plt.plot(range(6), mean['raw'], marker = "x")
 
     
 # plt.plot([0.0, 0.0001, 0.001, 0.01, 0.1], variance['raw'], marker='o')
 # plt.xscale('log')
 # plt.xlim([0.00001, 0.2])
 plt.xlabel('Error Probability')
-plt.ylabel('Variance of Output Values')
-plt.title('Variance of Output Values vs Error Probability')
+plt.ylabel('Output Value')
+plt.title('Output Value vs Error Probability')
 plt.legend()
 plt.savefig(f'results/circuit_runs/variance_vs_error_probability_n{nqubits}_pT{pT}.png')
         

@@ -28,7 +28,7 @@ max_expressivity_unitaries_per_pT = data['max_expressivity_unitaries_per_pT']
 sequences_per_pT = data['max_expressivity_sequences_per_pT']
 
 # for x in np.arange(0, 1, 0.2):
-for x in [0.4]:
+for x in [0.2]:
 
     qreg = QuantumRegister(nqubits, 'q')
     creg = ClassicalRegister(1, 'c')
@@ -50,14 +50,16 @@ for x in [0.4]:
             qc.s(inst[1])
 
     # qc.h(qreg[0])
-    # qc.save_statevector()
+    qc.save_statevector()
     qc.measure(qreg[0], creg[0])
 
     # print(qc)
 
 
-    for error_prob in [0.0, 0.0001, 0.001, 0.01, 0.1]:
-    # for error_prob in [0.0]:
+    # for error_prob in [0.0, 0.001, 0.00325, 0.00550, 0.00775, 0.01]:
+    # for error_prob in [0.003]:
+    # for error_prob in [0.003, 0.005, 0.007, 0.009]:
+    for error_prob in [0.0]:
             error = depolarizing_error(error_prob, 1)
             error2 = depolarizing_error(error_prob, 2)
             # error = pauli_error([('I', 1 - error_prob), ('X', error_prob / 3), ('Y', error_prob / 3), ('Z', error_prob / 3)])
@@ -67,7 +69,7 @@ for x in [0.4]:
             noise_model.add_all_qubit_quantum_error(error2, ['cx'])
 
             # print(compiled_circuit.data)
-            nshots = 500
+            nshots = 1000
             result = simulator.run(qc, noise_model=noise_model, shots=nshots).result()
             # result = simulator.run(qc).result()
             counts = result.get_counts()
@@ -82,4 +84,4 @@ for x in [0.4]:
                 pickle.dump(counts, f)
                 # pickle.dump(expect_value, f)
             
-            # print(f'Error prob: {error_prob}, x: {x:.2f}, Measurement results:', counts)
+            print(f'Error prob: {error_prob}, x:. {x:.2f}, Measurement results:', counts)

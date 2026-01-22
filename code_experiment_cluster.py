@@ -13,9 +13,9 @@ from multiprocessing import Pool
 
 simulator = Aer.get_backend('aer_simulator')
 
-nqubits = 2
-nshots = 165
-pT_index = 5
+nqubits = 3
+# nshots = 165
+pT_index = 3
 
 Z = sp.csc_matrix(np.array([[1, 0], [0, -1]]))
 
@@ -35,7 +35,7 @@ filename = f'results/circuit_runs/error_states_int.pkl'
 with open(filename, 'rb') as f:
     error_states_int = pickle.load(f)
 
-def f(pT_index, error_prob, x, nshots):
+def f(pT_index, error_prob, x, nshots, task):
 # for x in [0.4]:
 
 # def run_steane_code_experiment(x, prob_error, p_T_index):
@@ -128,16 +128,16 @@ def f(pT_index, error_prob, x, nshots):
     result = simulator.run(qc, noise_model=noise_model, shots=nshots).result()
     counts = result.get_counts()
 
-    filename = f'results/circuit_runs/steane_code_{nqubits}logqubits_pT{p_T_values[pT_index]}_errorprob{error_prob}_x{x:.2f}.pkl'
-    with open(filename, 'rb') as f:
-        data = pickle.load(f)
+    filename = f'results/circuit_runs/steane_code_{nqubits}logqubits_pT{p_T_values[pT_index]}_errorprob{error_prob}_x{x:.2f}_task{task}.pkl'
+    # with open(filename, 'rb') as f:
+    #     data = pickle.load(f)
 
-    #add counts to existing data
-    for key, value in counts.items():
-        if key in data:
-            data[key] += value
-        else:
-            data[key] = value
+    # #add counts to existing data
+    # for key, value in counts.items():
+    #     if key in data:
+    #         data[key] += value
+    #     else:
+    #         data[key] = value
 
     with open(filename, 'wb') as f:
         pickle.dump(counts, f)
@@ -151,14 +151,14 @@ def f(pT_index, error_prob, x, nshots):
 if __name__ == '__main__':
  
     tasks = []
-    x = 0.6
-    nshots = 165
+    x = 0.2
+    nshots = 167
     # for pT_index in range(1,6):
     # for error_prob in [0.0, 0.0001, 0.001, 0.01, 0.1]:
-    for _ in range(6):
-        for error_prob in [0.003, 0.005, 0.007, 0.009]:
+    for task in range(6):
+        for error_prob in [0.001, 0.00325, 0.00550, 0.00775, 0.01]:
             # for x in np.arange(0.0, 1.0, 0.2):    
-            tasks.append((pT_index, error_prob, x, nshots))
+            tasks.append((pT_index, error_prob, x, nshots, task))
 
     print("Using 30 worker processes")
 
