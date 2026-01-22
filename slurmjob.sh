@@ -4,7 +4,7 @@
 #SBATCH --output=%job.out
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=25
+#SBATCH --cpus-per-task=30
 #SBATCH --mem=64G
 
 export OMP_NUM_THREADS=1

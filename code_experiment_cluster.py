@@ -158,7 +158,7 @@ if __name__ == '__main__':
     for _ in range(6):
         for error_prob in [0.003, 0.005, 0.007, 0.009]:
             # for x in np.arange(0.0, 1.0, 0.2):    
-            tasks.append((pT_index, error_prob, x))
+            tasks.append((pT_index, error_prob, x, nshots))
 
     print("Using 30 worker processes")
 
