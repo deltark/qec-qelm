@@ -6,13 +6,21 @@ from random_cliff_t_circuit_ergodicity_numpy import *
 # os.environ['RUST_BACKTRACE'] = 'full' # For debugging synthesis errors
 
 nqubits = 3
-observables = generate_all_pauli_observables(nqubits)
+n_accessible = 1
+
 epsilon = 0.38
 list_nsteps = [1, 2, 3]
 
-for n_accessible in range(1, nqubits):
-    n_hidden = nqubits - n_accessible
+# for n_accessible in range(1, nqubits):
+#     n_hidden = nqubits - n_accessible
 
+
+def fourier_analysis_ising(nqubits, n_accessible = 1, epsilon = 0.38, list_nsteps = [1, 2, 3]):
+    
+    observables = generate_all_pauli_observables(nqubits)
+    list_tcount_ising = []
+    fourier_expressivities = []
+    
     for nsteps in list_nsteps:
         print(f'\n=== n_accessible={n_accessible}, nsteps={nsteps} ===')
 
@@ -28,6 +36,7 @@ for n_accessible in range(1, nqubits):
 
         n_tgates = count_n_Tgates(ising_circuit)
         print(f'Number of T-gates in the circuit: {n_tgates}')
+        list_tcount_ising.append(n_tgates)
 
         p_T = n_tgates / n_gates
         print(f'Proportion of T-gates in the circuit: {p_T}')
@@ -52,3 +61,7 @@ for n_accessible in range(1, nqubits):
             fourier_expressivity_per_observable.append(fourier_expressivity)
         fourier_expressivity = np.mean(fourier_expressivity_per_observable)
         print(f'Fourier expressivity for n_accessible={n_accessible}: {fourier_expressivity}')
+
+        fourier_expressivities.append(fourier_expressivity)
+    
+    return list_tcount_ising, fourier_expressivities

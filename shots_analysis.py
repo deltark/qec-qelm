@@ -2,11 +2,12 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 import plothist
+from matplotlib import cm
 
-nqubits = 3
-pT = 0.15
-# error_prob_list = [0.0, 0.0001, 0.001, 0.003, 0.005, 0.007, 0.009, 0.01, 0.1]
-error_prob_list = [0.0, 0.001, 0.00325, 0.00550, 0.00775, 0.01]
+nqubits = 2
+pT = 0.25
+error_prob_list = [0.0, 0.0001, 0.001, 0.003, 0.005, 0.007, 0.009, 0.01, 0.1]
+# error_prob_list = [0.0, 0.001, 0.00325, 0.00550, 0.00775, 0.01]
 # error_prob_list = [0.0, 0.0001, 0.001, 0.01, 0.1]
 
 ##bitstrings in logical 1 state of Steane code
@@ -59,36 +60,36 @@ for error_prob in error_prob_list:
 
     # for error_prob in [0.0, 0.01, 0.03, 0.07, 0.1]:
     # for x in np.arange(0.0, 1.0, 0.2):
-    for x in [0.2]:
+    for x in [0.6]:
         # ======= ENCODED =======
-        # filename = f'results/circuit_runs/steane_code_{nqubits}logqubits_pT{pT}_errorprob{error_prob}_x{x:.2f}.pkl'
+        filename = f'results/circuit_runs/steane_code_{nqubits}logqubits_pT{pT}_errorprob{error_prob}_x{x:.2f}.pkl'
 
-        # unencoded_counts = {'0': 0, '1': 0}
-        # nb_codestates = 0
-        # nb_decodable_states = 0
-        # # nb_discarded_states = 0
-        # with open(filename, 'rb') as f:
-        #     counts = pickle.load(f)
-        # for bitstring, count in counts.items():
-        #     if bitstring in logical_0_states or bitstring in logical_1_states:
-        #         nb_codestates += count
-        #     if bitstring in error_0_states:
-        #         unencoded_counts['0'] += count
-        #         nb_decodable_states += count
-        #     elif bitstring in error_1_states:
-        #         unencoded_counts['1'] += count
-        #         nb_decodable_states += count
-        #     # else:
-        #     #     nb_discarded_states += count
+        unencoded_counts = {'0': 0, '1': 0}
+        nb_codestates = 0
+        nb_decodable_states = 0
+        # nb_discarded_states = 0
+        with open(filename, 'rb') as f:
+            counts = pickle.load(f)
+        for bitstring, count in counts.items():
+            if bitstring in logical_0_states or bitstring in logical_1_states:
+                nb_codestates += count
+            if bitstring in error_0_states:
+                unencoded_counts['0'] += count
+                nb_decodable_states += count
+            elif bitstring in error_1_states:
+                unencoded_counts['1'] += count
+                nb_decodable_states += count
+            # else:
+            #     nb_discarded_states += count
 
               
-        # average_result = (unencoded_counts.get('0', 0)+ unencoded_counts.get('1', 0)*(-1) ) / nb_decodable_states if nb_decodable_states > 0 else 0
-        # # sumd2 = (unencoded_counts.get('0', 0)*(-1-average_result)**2 + unencoded_counts.get('1', 0)*(1-average_result)**2)
-        # # variance_result = sumd2/nb_decodable_states
-        # output_values['encoded'].append(average_result)
-        # # output_variance['encoded'].append(variance_result)
+        average_result = (unencoded_counts.get('0', 0)+ unencoded_counts.get('1', 0)*(-1) ) / nb_decodable_states if nb_decodable_states > 0 else 0
+        # sumd2 = (unencoded_counts.get('0', 0)*(-1-average_result)**2 + unencoded_counts.get('1', 0)*(1-average_result)**2)
+        # variance_result = sumd2/nb_decodable_states
+        output_values['encoded'].append(average_result)
+        # output_variance['encoded'].append(variance_result)
 
-        # # print('Unencoded counts:', unencoded_counts)
+        # print('Unencoded counts:', unencoded_counts)
 
         # ======= RAW ==========
 
@@ -109,13 +110,13 @@ for error_prob in error_prob_list:
         # print('Raw counts', counts)
 
         # print(f'For error probability {error_prob} and x={x:.2f}, average count for code states: {average_result}')
-            # print(f'Number of code states counted: {nb_codestates}')
-            # print('/n')
-        # print(f'For error probability {error_prob} and x={x:.2f}:'
-        #       f'\n  Number of codestates counted: {nb_codestates}'
-        #       f'\n  Number of decodable states counted: {nb_decodable_states}'
-        #     #   f'\n  Number of discarded states: {nb_discarded_states}'
-        #       f'\n  Unencoded counts: {unencoded_counts}')
+        # print(f'Number of code states counted: {nb_codestates}')
+        # print('/n')
+        print(f'For error probability {error_prob} and x={x:.2f}:'
+        f'\n  Number of codestates counted: {nb_codestates}'
+        f'\n  Number of decodable states counted: {nb_decodable_states}'
+        # f'\n  Number of discarded states: {nb_discarded_states}'
+        f'\n  Unencoded counts: {unencoded_counts}')
     
     # print(output_values)
     # print("Shots var", output_variance)
@@ -138,22 +139,24 @@ print(f'Mean at error probability 0: encoded={mean["encoded"][0]}, raw={mean["ra
 
 plt.figure()
 # plt.hlines(var_exact, 0, 4, colors="black")
-plt.hlines(mean_exact, 0, 0.1, colors="black")
+plt.hlines(mean_exact, 0, 0.01, colors="black", linestyles="--")
 # plt.hlines(mean_exact+var_exact, 0, 4, colors="grey")
 # plt.hlines(mean_exact-var_exact, 0, 4, colors="grey")
 # for key in variance.keys():
-#     # plt.plot(range(5), variance[key], label=key, marker='o')
-#     plt.plot(error_prob_list, mean[key], marker = 'x')
-plt.plot(range(6), mean['raw'], marker = "x")
+    # plt.plot(range(5), variance[key], label=key, marker='o')
+plt.plot(error_prob_list, mean["raw"], marker = 'o', color = cm.Set1(0))
+plt.plot(error_prob_list, mean["encoded"], marker = 'o', color = cm.Set1(1))
+# plt.plot(range(6), mean['raw'], marker = "x")
 
     
 # plt.plot([0.0, 0.0001, 0.001, 0.01, 0.1], variance['raw'], marker='o')
-# plt.xscale('log')
+plt.xscale('log')
 # plt.xlim([0.00001, 0.2])
 plt.xlabel('Error Probability')
-plt.ylabel('Output Value')
-plt.title('Output Value vs Error Probability')
-plt.legend()
-plt.savefig(f'results/circuit_runs/variance_vs_error_probability_n{nqubits}_pT{pT}.png')
+plt.ylabel('Output Measurement')
+# plt.title('Output Value vs Error Probability')
+plt.legend(["Exact", "Raw", "Encoded"])
+plt.savefig(f'results/poster_figures/output_vs_error_probability_n{nqubits}_pT{pT}.png', bbox_inches='tight')
+plt.savefig(f'results/poster_figures/output_vs_error_probability_n{nqubits}_pT{pT}.eps', bbox_inches='tight')
         
 

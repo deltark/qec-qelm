@@ -3,6 +3,7 @@ import scipy.sparse as sp
 import numpy as np
 from random_cliff_t_circuit_ergodicity_numpy import compute_fourier_coeffs, lift_1q_gate, generate_all_pauli_observables
 import matplotlib.pyplot as plt
+from matplotlib import colormaps
 import plothist
 
 nqubits = 3
@@ -71,22 +72,22 @@ for n_accessible in [1]:
 
 
     pickle_filename = f'results/fourier_analysis/fourier_expressivity_from_sequence_n{nqubits}.pkl'
-    with open(pickle_filename, 'wb') as f:
-        pickle.dump({'p_T_values': list_p_T,
-                    'max_expressivity_unitaries_per_pT': max_expressivity_unitaries,
-                    'max_expressivity_sequences_per_pT': max_expressivity_sequence,
-                    'average_expressivity_by_pT': average_expressivity_by_pT,
-                    'variance_expressivity_by_pT': variance_expressivity_by_pT,
-                    'max_fourier_expressivity_by_pT': fourier_expressivity_by_pT}, f)
+    # with open(pickle_filename, 'wb') as f:
+    #     pickle.dump({'p_T_values': list_p_T,
+    #                 'max_expressivity_unitaries_per_pT': max_expressivity_unitaries,
+    #                 'max_expressivity_sequences_per_pT': max_expressivity_sequence,
+    #                 'average_expressivity_by_pT': average_expressivity_by_pT,
+    #                 'variance_expressivity_by_pT': variance_expressivity_by_pT,
+    #                 'max_fourier_expressivity_by_pT': fourier_expressivity_by_pT}, f)
     res_acc.append(average_expressivity_by_pT)
     var_acc.append(variance_expressivity_by_pT)
     max_acc.append(fourier_expressivity_by_pT) 
 plt.figure()
 for i in range(len(res_acc)):
-    plt.errorbar(list_p_T, res_acc[i], marker='o', yerr=var_acc[i], label=f'n_accessible={i+1}')
+    plt.errorbar(list_p_T, res_acc[i], marker='o', yerr=var_acc[i], label=f'n_accessible={i+1}', color = colormaps.jet(i))
     plt.plot(list_p_T, max_acc[i], marker='x')
 plt.xlabel('p_T')
 plt.ylabel('Average Fourier Expressivity')
 plt.title('Average Fourier Expressivity vs p_T')
 plt.legend()
-plt.savefig(f'results/fourier_analysis/avg_fourier_expressivity_from_sequence_n{nqubits}_allobservables_new2.png')
+plt.savefig(f'results/poster_figures/avg_fourier_expressivity_from_sequence_n{nqubits}_allobservables_new2.png')
