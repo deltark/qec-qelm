@@ -64,6 +64,13 @@ filename = f'results/circuit_runs/error_states_int.pkl'
 with open(filename, 'rb') as f:
     error_states_int = pickle.load(f)
 
+# Define the corrective block once
+def correction_block(qc, ancilla):
+    for i in range(7):
+        qc.x(ancilla[i])
+        for _ in range(3):
+            qc.s(ancilla[i])
+
 def t_gate_teleportation(qc, ancilla, logical_qubit_register, creg):
      # T-gate teleportation using ancilla qubits
             qc.reset(ancilla)
@@ -74,12 +81,10 @@ def t_gate_teleportation(qc, ancilla, logical_qubit_register, creg):
                 qc.append(perfect_cnot, (ancilla[i], logical_qubit_register[i]))
             qc.measure(logical_qubit_register, creg)
             # Conditional SX-gate based on measurement outcome
-            for error in error_states_int:
-                with qc.if_test((creg, error)):
-                    for i in range(7):
-                        qc.x(ancilla[i])
-                        for _ in range(3): # Transversal S-gate is 3 layers of S
-                            qc.s(ancilla[i])
+            # Use switch instead of looping over multiple if_test
+            with qc.switch(creg) as case:
+                with case(*error_states_int):
+                    correction_block(qc, ancilla)
             # Swap ancilla back to the logical qubit
             for i in range(7):
                 qc.swap(ancilla[i], logical_qubit_register[i])
@@ -94,8 +99,10 @@ def t_gate_teleportation(qc, ancilla, logical_qubit_register, creg):
 
 # qc.compose(steane_code_circuit(), qreg, inplace=True)
 # t_gate_teleportation(qc, ancilla, qreg, creg)
-# qc.compose(steane_code_circuit().inverse(), qreg, inplace=True)
-# qc.save_statevector()
+# # qc.compose(steane_code_circuit().inverse(), qreg, inplace=True)
+# # qc.save_statevector()
+
+# print(qc)
 
 # initial_state = QuantumCircuit(7)
 # # # initial_state.append(perfect_hgate, 3)  # Example initial state |+>

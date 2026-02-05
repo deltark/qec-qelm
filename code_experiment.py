@@ -10,8 +10,8 @@ from steane_code import steane_code_encoding_circuit, steane_code_circuit, t_gat
 from random_cliff_t_circuit_ergodicity_numpy import beta_k
 import scipy.sparse as sp
 
-nqubits = 2
-nshots = 10
+nqubits = 3
+nshots = 1
 simulator = Aer.get_backend('aer_simulator')
 
 Z = sp.csc_matrix(np.array([[1, 0], [0, -1]]))
